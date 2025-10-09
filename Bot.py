@@ -5,6 +5,7 @@ from PyQt5.QtCore import QRunnable, QThreadPool, pyqtSlot
 from PyQt5.uic import loadUi
 import sys
 import json
+import time
 import UI.images
 
 keys = []
@@ -12,6 +13,8 @@ wait_time = 3
 macro_path = "macro.txt"
 playing = False
 settings: dict = {"ExitKey": "f6"}
+delay = 0.16  # delay in seconds between storing mouse movements
+last_time = 0
 
 
 def on_press(key):
@@ -49,9 +52,12 @@ def on_release(key):
 
 
 def on_move(x, y):
-    print(f"Pointer moved to {(x, y)}", end="\r")
-    if f"Pointer to {x},{y}" not in keys:
+    global last_time
+    current_time = time.time()
+    if f"Pointer to {x},{y}" not in keys and current_time - last_time >= delay:
         keys.append(f"Pointer to {x},{y}")
+        last_time = current_time
+        print(f"Pointer moved to {(x, y)}", end="\r")
 
 
 def on_click(x, y, button: mouse.Button, pressed):
@@ -111,8 +117,7 @@ class MainUI(QMainWindow):
         )
         mouse_listener.start()
 
-        keyboard_listener = keyboard.Listener(
-            on_press=on_press, on_release=on_release)
+        keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
         keyboard_listener.start()
 
         keyboard_listener.join()
@@ -158,12 +163,10 @@ class MainUI(QMainWindow):
                     pyautogui.hscroll(int(pointer[1]))
                 elif key.startswith("mouse"):
                     if key.endswith("pressed"):
-                        key = key.removeprefix(
-                            "mouse ").removesuffix(" pressed")
+                        key = key.removeprefix("mouse ").removesuffix(" pressed")
                         pyautogui.mouseDown(button=key)
                     elif key.endswith("released"):
-                        key = key.removeprefix(
-                            "mouse ").removesuffix(" released")
+                        key = key.removeprefix("mouse ").removesuffix(" released")
                         pyautogui.mouseUp(button=key)
                 elif key.endswith("pressed"):
                     key = key.removesuffix(" pressed")
@@ -191,7 +194,7 @@ class MainUI(QMainWindow):
                                 key = "9"
                             case "à":
                                 key = "0"
-                    pyautogui.keyDown(key, duration=0.1)
+                    pyautogui.keyDown(key)
                 elif key.endswith("released"):
                     key = key.removesuffix(" released")
                     if is_win_pressed:
@@ -218,7 +221,7 @@ class MainUI(QMainWindow):
                                 key = "0"
                     elif key == "win":
                         is_win_pressed = False
-                    pyautogui.keyUp(key, duration=0.1)
+                    pyautogui.keyUp(key)
 
             self.recordButton.setEnabled(True)
             self.playButton.setEnabled(True)
@@ -237,9 +240,13 @@ class Worker(QRunnable):
 def on_hotkey_press(key):
     if hasattr(key, "char"):
         settings["ExitKey"] = key.char
+        return False
     elif hasattr(key, "name"):
         settings["ExitKey"] = key.name
-    return False
+        return False
+    else:
+        print(key)
+        return None
 
 
 class PopupWindow(QWidget):
