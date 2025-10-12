@@ -1,9 +1,12 @@
+.gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
+UI/__pycache__/
 *.py[codz]
 *$py.class
 
-# .git folde
+# .git folder
 .git/
 
 # C extensions
