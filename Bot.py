@@ -6,6 +6,7 @@ from PyQt5.uic import loadUi
 import sys
 import json
 import time
+import os
 import UI.images
 
 keys = []
@@ -82,8 +83,9 @@ class MainUI(QMainWindow):
         global settings
 
         loadUi("UI/Bot.ui", self)
-        with open("settings.json", "r") as file:
-            settings = json.load(file)
+        if os.path.exists("settings.json"):
+            with open("settings.json", "r") as file:
+                settings = json.load(file)
         self.threadpool = QThreadPool()
         exit_listener = keyboard.Listener(on_press=on_play_exit)
         exit_listener.start()
