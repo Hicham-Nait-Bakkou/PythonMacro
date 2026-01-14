@@ -12,6 +12,9 @@ UI/__pycache__/
 # C extensions
 *.so
 
+macro.txt
+settings.json
+
 # Distribution / packaging
 .Python
 build/
