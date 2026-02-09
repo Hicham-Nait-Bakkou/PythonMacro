@@ -27,5 +27,5 @@ pip3 install -r requirements.txt
 And just run the python progam with:
 
 ```
-python3 Bot.py
+python3 main.py
 ```

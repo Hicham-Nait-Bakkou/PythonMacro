@@ -17,6 +17,14 @@ settings: dict = {"ExitKey": "f6"}
 delay = 0.16  # delay in seconds between storing mouse movements
 last_time = 0
 
+### for pyinstaller
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+macro_path = resource_path(macro_path)
+###
 
 def on_press(key):
     if hasattr(key, "name"):
@@ -82,9 +90,9 @@ class MainUI(QMainWindow):
         super(MainUI, self).__init__()
         global settings
 
-        loadUi("UI/Bot.ui", self)
-        if os.path.exists("settings.json"):
-            with open("settings.json", "r") as file:
+        loadUi(resource_path("UI/Bot.ui"), self)
+        if os.path.exists(resource_path("settings.json")):
+            with open(resource_path("settings.json"), "r") as file:
                 settings = json.load(file)
         self.threadpool = QThreadPool()
         exit_listener = keyboard.Listener(on_press=on_play_exit)
@@ -121,8 +129,10 @@ class MainUI(QMainWindow):
 
         keyboard_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
         keyboard_listener.start()
-
-        keyboard_listener.join()
+        
+        while keyboard_listener.is_alive():
+            if not self.isVisible():
+                return
 
         print("\n")
 
@@ -225,8 +235,8 @@ class MainUI(QMainWindow):
                         is_win_pressed = False
                     pyautogui.keyUp(key)
 
-            self.recordButton.setEnabled(True)
-            self.playButton.setEnabled(True)
+        self.recordButton.setEnabled(True)
+        self.playButton.setEnabled(True)
 
 
 class Worker(QRunnable):
@@ -255,7 +265,7 @@ class PopupWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        loadUi("UI/BotPopup.ui", self)
+        loadUi(resource_path("UI/BotPopup.ui"), self)
         self.threadpool = QThreadPool()
         self.hotkeyButton.setText(settings["ExitKey"].capitalize())
         self.hotkeyButton.clicked.connect(self.on_change_hotkey_clicked)
@@ -266,7 +276,7 @@ class PopupWindow(QWidget):
         hotkey_listener.join()
         self.hotkeyButton.setEnabled(True)
         self.hotkeyButton.setText(settings["ExitKey"].capitalize())
-        with open("settings.json", "w") as file:
+        with open(resource_path("settings.json"), "w") as file:
             json.dump(settings, file, indent=3)
 
     def on_change_hotkey_clicked(self):
